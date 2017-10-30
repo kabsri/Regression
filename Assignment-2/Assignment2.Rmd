@@ -1,0 +1,250 @@
+---
+title: "MATH533 Assignment 2"
+author: "Kabilan Sriranjan"
+date: "October 27, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+
+```{r}
+salary = read.csv("http://www.math.mcgill.ca/yyang/regression/data/salary.csv", header=TRUE)
+x1 = salary$SPENDING/1000
+y = salary$SALARY
+fit.Salary = lm(y~x1)
+summary(fit.Salary)
+```
+We aim to write R code to replicate some of the results reported in the summary function.
+
+
+##a) Calculating the estimates
+```{r}
+n = length(x1)
+A = matrix (c(n, sum(x1), sum(x1), sum(x1^2)), 2, 2)
+alpha = c(sum(y), sum(x1*y))
+beta = solve(A) %*% alpha
+beta
+```
+Here we have estimated $\widehat{\beta}$ using the formulas derived to minimize the residual sum of squares. 
+\[
+\widehat{\beta} = \begin{bmatrix} n & \sum_{i=1}^nx_{i1} \\ \sum_{i=1}^nx_{i1} & \sum_{i=1}^nx_{i1}^2 \end{bmatrix}^{-1} \begin{bmatrix} \sum_{i=1}^ny_i \\ \sum_{i=1}^nx_{i1}y_i \end{bmatrix}
+\]
+We see that our coefficients are equal to the ones in the coefficient column from the R summary.
+
+
+```{r}
+plot(x1, y, xlab="Spending per pupil ($1000)", ylab = "Salary ($)", pch=18)
+title("Annual Teacher Salary vs Per Pupil Spending In 51 States")
+abline(beta, col=4)
+```
+
+
+As further verification we also have a plot with the line of best fit that we calculated manually superimposed and can see that it indeed appears to be the true line of best fit.
+
+
+##b) Calculating residual standard error
+```{r}
+X = matrix( c(rep(1, n), x1), n, 2)
+estimatedY = X %*% beta
+e = y-estimatedY
+SSres = sum(e^2)
+RSE = sqrt(SSres/(n-2))
+RSE
+```
+To compute the residual standard error we used the formula 
+\[
+\hat{\sigma} = \sqrt{\frac{SS_{Res}}{n-2}}
+\]
+Our output matches the residual standard error given by the summary function.
+
+
+##c) Computing standard error for estimate
+```{r}
+ese_beta0_table = beta[1]/summary(fit.Salary)$coefficients[, 3][1]
+ese_beta0_table
+```
+The standard error for the intercept is just given by
+\[
+e.s.e(\widehat{\beta}_0) = \frac{\widehat{\beta}_0}{t_0} \\
+\]
+
+
+```{r}
+ESE = (RSE^2)*solve( t(X) %*% X)
+ese_beta0_data = sqrt(ESE[1,1])
+ese_beta0_data
+```
+If we want to use the data directly, we can compute standard error by looking at the matrix
+\[
+e.s.e(\widehat{\beta}) = \hat{\sigma}^2(X^TX)
+\]
+And taking the square root of the first element of the diagonal. It can clearly be seen that both values match the R summary output.
+
+
+##d) Computing R^2
+```{r}
+SSreg = sum((estimatedY - mean(y))^2)
+R_2 = SSreg/(SSres+SSreg)
+R_2
+```
+To compute $R^2$ we use the identity $SS_{Total} = SS_{Reg} + SS_{Res}$ in
+\[
+R^2 = \frac{SS_{Reg}}{SS_{Reg} + SS_{Res}}
+\]
+This matches the $R^2$ value given by the summary.
+
+
+##e) Regression sum of squares identity
+To show that $SS_{Reg} = \widehat{\beta}_1S_{xy}$ we just need simple algebra.
+\begin{align*}
+SS_{Reg} &= \sum_{i=1}^n(\widehat{y}_i - \bar{y})^2 \\
+&= \sum_{i=1}^n( (\widehat{\beta}_0 + \widehat{\beta}_1x_{i1}) - (\widehat{\beta}_0 + \widehat{\beta}_1\bar{x}_{1}) )^2 \\
+&= \widehat{\beta}_1^2\sum_{i=1}^n(x_{i1}-\bar{x}_1)^2 \\
+&= (\frac{S_{xy}}{S_{xx}})^2S_{xx} \\
+&= \widehat{\beta}_1S_{xy}
+\end{align*}
+
+```{r}
+Sxy = sum(y*(x1-mean(x1)))
+Sxx = sum((x1-mean(x1))^2)
+beta[2]*Sxy
+SSreg
+```
+Here we show the same result as the proof but for a numeric example. As expected, both outputs are the same.
+
+
+##f) Computing the F-statistic
+```{r}
+f = SSreg/(SSres/(n-2))
+f
+```
+The F-statistic for a simple linear regression (p = 2) is given by 
+\[
+F = \frac{SS_{reg}}{SS_{Res}/(n-2)}
+\]
+It matches the F-statistic in the R summary.
+
+
+##g) Trace identities
+Computing the trace of both matrices is fairly simple:
+\begin{align*}
+tr(I_n-H_1) &= tr(I_n) - tr(H_1) \\
+&= tr(I_n) - \frac{1}{n}tr(1_n) \\
+&= n - n\frac{1}{n} \\
+&= n-1 \\
+\\
+tr(H-H_1) &= tr(H) - tr(H_1) \\
+&= tr(X(X^TX)^{-1}X^T) - tr(H_1) \\
+&= tr(X^TX(X^TX)^{-1}) - \frac{1}{n}tr(1_n) \\
+&= tr(I_p) - n\frac{1}{n} \\
+&= p-1
+\end{align*}
+```{r}
+H = X %*% solve(t(X) %*% X) %*% t(X)
+H1 = (1/n) * matrix(1, n, n)
+I = diag(n)
+sum(diag(I-H1))
+sum(diag(H-H1))
+```
+In our example n = 50 and p = 2 so we indeed get the expected results for $trace(I_n-H_1)$ and $trace(H-H_1)$ when computed numerically, as above.
+
+
+##h) Residual plots and orthogonality
+```{r}
+plot(x1, e, xlab ="Spending per pupil ($1000)", ylab="Residuals", pch=18)
+title("Residual Plot")
+abline(0, 0, lty=2)
+```
+
+
+The residual plot appears to justify the assumptions of the model, namely that the mean looks to be roughly 0 and the variance roughly constant.
+
+
+```{r}
+t(diag(I)) %*% e
+t(X) %*% e
+t(estimatedY) %*% e
+```
+The values we computed for $1_n^Te$, $X^Te$, and $\widehat{y}^Te$ are close enough to 0 for us to be comfortable saying that they are orthogonal.
+
+
+##i) Predicting at an arbitrary value
+```{r}
+xnew = matrix(c(1, 4.8), 1, 2)
+xnew %*% beta
+```
+Using the model we can predict the average salary for a state that spends $4800 per pupil simply by
+\[
+\widehat{y}_{new} = \begin{bmatrix} 1 & 4.8 \end{bmatrix} \widehat{\beta}
+\]
+We used 4.8 for the prediction as our model interprets x as "x thousand dollars" 
+
+
+##j) Computing standard prediction error
+```{r}
+predictionError = RSE*sqrt((xnew %*% solve(t(X) %*% X) %*% t(xnew)))
+predictionError
+```
+The prediction error for when x is 4.8 is just the square root of the variance of the random variable version of our prediction. Namely if $x_{new} = \begin{bmatrix} 1 & 4.8 \end{bmatrix}$ then we have
+\[
+Pred. Err = {\hat{\sigma}}\sqrt{x_{new}(X^TX)^{-1}x_{new}^T}
+\]
+
+
+## Question 2
+```{r}
+y0 = scan("http://www.math.mcgill.ca/yyang/regression/data/US-GDP.txt")
+y = 100*log(y0[-1]/y0[-278])
+x1 = c(1:277)
+x1_begin = c(1:(132))
+x1_end = c(133:277)
+y_begin = y[1:132]
+y_end = y[133:277]
+fit.Begin = lm(y_begin~x1_begin)
+fit.End = lm(y_end~x1_end)
+
+plot(x1, y, xlab="Time (Quarter Years)", ylab="GDP Growth (%)", pch=18)
+title("US GDP Growth")
+```
+
+
+Here is the plot for the GDP growth in the US. Roughly speaking, it looks like there is a different relationship between time and GDP growth between the left half and the right half of the plot. We will try to see if there is any statistical evidence to back up this claim.
+
+
+```{r}
+plot(x1_begin, y_begin, xlab="Time (Quarter Years)", ylab="GDP Growth (%)", pch=18)
+title("US GDP Growth (first half)")
+abline(coef(fit.Begin), col=3)
+```
+
+
+Here we have only plotted the first half of the data. The regression line is also only computed from the first half of the data.
+
+
+```{r}
+plot(x1_end, y_end, xlab="Time (Quarter Years)", ylab="GDP Growth (%)", pch=18)
+title("US GDP Growth (second half)")
+abline(coef(fit.Begin), col=3)
+abline(coef(fit.End), col=2)
+```
+
+
+Here is the plot of the second half of the data. In green is the regression line computed for the first half of the data, the same one in the earlier plot. In red is the regression line for the second half. The goal is to verify if there is statistical evidence that the estimate for the red line is significantly different than the estimate for the green line.
+
+
+```{r}
+plot(x1_end, y_end, xlab="Time (Quarter Years)", ylab="GDP Growth (%)", pch=18)
+title("US GDP Growth (second half)")
+abline(coef(fit.Begin), col=3)
+abline(coef(fit.End), col=2)
+abline(c(confint(fit.End)[1,2], confint(fit.End)[2,2]), col=2, lty=2)
+abline(c(confint(fit.End)[1,1], confint(fit.End)[2,1]), col=2, lty=2)
+```
+
+
+This is the same plot but with dotted red lines to show the confidence intervals for the second regression line. We see that the green line does not lie withing the confidence interval, so we have statistical evidence that the two regression lines are indeed different.
