@@ -1,0 +1,20 @@
+---
+title: "MATH533: Assignment 3"
+author: "Kabilan Sriranjan"
+date: "November 20, 2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 1
+
+```{r cars}
+summary(cars)
+```
+
+## MATH533 Extra Question 1
+
+## MATH533 Extra Question 2
