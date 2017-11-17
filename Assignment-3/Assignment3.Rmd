@@ -11,10 +11,92 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Question 1
 
-```{r cars}
-summary(cars)
+```{r}
+data = read.csv("http://www.math.mcgill.ca/yyang/regression/data/cigs.csv" , header=TRUE)
+y = data$CO
+x1 = data$TAR
+x2 = data$NICOTINE
+x3 = data$WEIGHT
 ```
+We are going to compare models that use different combinations of our predictors, namely tar, nicotine, and weight.
+
+
+##a)
+```{r}
+full_model = lm(y~x1+x2+x3)
+SS_res_full = anova(full_model)[4,2]
+SS_res_full
+```
+Here we used the anova function to find $SS_{Res}(\beta_0,\beta_1,\beta_2,\beta_3)$
+
+
+##b)
+```{r}
+reduced_model = lm(y~x1+x2)
+SS_res_reduced = anova(reduced_model)[3,2]
+SS_res_reduced
+```
+Now using the anova function to find $SS_{Res}(\beta_0,\beta_1,\beta_2)$
+
+
+##c)
+```{r}
+n = length(x1)
+p = 4
+r=1
+F_stat  = ((SS_res_reduced - SS_res_full)/r)/(SS_res_full/(n-p))
+F_stat
+```
+Computing the F-statistic to compare the full model with the model without $x_3$
+
+
+##d)
+```{r}
+table_1 = anova(lm(y~x3+x2+x1))
+SSR3_0 = table_1[1,2]
+SSR2_03 = table_1[2,2]
+SSR1_032 = table_1[3,2]
+decomp_1 = c(SSR3_0, SSR2_03, SSR1_032, SSR3_0+SSR2_03+SSR1_032)
+decomp_1
+```
+We add the variables to the model in the order $x_3>>x_2>>x_1$ so that we can use the anova function to get the decomposition 
+\[
+\overline{SS}_R(\beta_1,\beta_2,\beta_3|\beta_0) = \overline{SS}_R(\beta_3|\beta_0) + \overline{SS}_R(\beta_2 |\beta_0,\beta_3) + \overline{SS}_R(\beta_1 |\beta_0,\beta_3,\beta_2)
+\]
+
+
+##e)
+```{r}
+table_2 = anova(reduced_model)
+SSR1_0 = table_2[1,2]
+SSR2_01 = table_2[2,2]
+decomp_2 = c(SSR1_0, SSR2_01, SSR1_0+SSR2_01)
+decomp_2
+```
+We add the variables to the model in the order $x_1>>x_2$ so that we can get the decomposition 
+\[
+\overline{SS}_R(\beta_1,\beta_2|\beta_0) = \overline{SS}_R(\beta_1 |\beta_0) + \overline{SS}_R(\beta_2|\beta_0,\beta_1)
+\]
+
+
+##f)
+```{r}
+reduced_model_2 = lm(y~x1)
+SS_res_red2 = anova(reduced_model_2)[2,2]
+p=3
+r=1
+F_stat2 = ((SS_res_red2 - SS_res_reduced)/r)/(SS_res_reduced/(n-p))
+F_stat2
+```
+If we consdier our full model to now only include $x_1$ and $x_2$ then the above code computes the F-statistic comparing the full model with the model that only uses $x_1$
+
+
+##g)
+```{r}
+F_stat3 = summary(reduced_model)$fstatistic[1]
+F_stat3
+```
+Here we computed the F-statistic for comparing our new full model to the mean only model. Note that this is equivalent to just finding the F-statistic of the model normally.
+
 
 ## MATH533 Extra Question 1
-
-## MATH533 Extra Question 2
