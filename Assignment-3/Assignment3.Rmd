@@ -96,7 +96,46 @@ If we consdier our full model to now only include $x_1$ and $x_2$ then the above
 F_stat3 = summary(reduced_model)$fstatistic[1]
 F_stat3
 ```
-Here we computed the F-statistic for comparing our new full model to the mean only model. Note that this is equivalent to just finding the F-statistic of the model normally.
+Here we computed the F-statistic for comparing our new full model to the mean only model. Note that this is equivalent to just finding the F-statistic of the full model normally.
 
 
 ## MATH533 Extra Question 1
+
+##a)
+We want to show that if $Z$ is an orthogonal $n \times M$ matrix then $\hat{y} = \bar{y}\mathbf{1} + \sum_{m=1}^M\hat{\theta}_mz_m$ where $\hat{\theta}_m = z_m^Ty/z_m^Tz_m$
+\begin{align*}
+\hat{y} &= \mathbf{Z(Z^TZ)^{-1}Z^T}y \\
+&= \mathbf{Z}\Bigg(\begin{bmatrix} z_0 \\ \vdots \\ z_M \end{bmatrix}\begin{bmatrix} z_0 & ... & z_M \end{bmatrix}\Bigg)^{-1}\begin{bmatrix} z_0 \\ \vdots \\ z_M\end{bmatrix}\begin{bmatrix} y_1 \\ \vdots \\ y_n \end{bmatrix} \\
+&= \mathbf{Z}\begin{bmatrix} z_0^Tz_0 & ... & z_0^Tz_j & ... & z_0^Tz_M \\ \vdots & & \vdots & & \vdots \\ z_i^Tz_0 & ... & z_i^Tz_j & ... & z_i^Tz_M \\ \vdots & & \vdots & & \vdots \\ z_M^Tz_0 & ... & z_M^Tz_j & ... & z_M^Tz_M \end{bmatrix}^{-1}\begin{bmatrix} z_0^Ty \\ \vdots \\ z_M^Ty\end{bmatrix} \\
+&= \mathbf{Z}\begin{bmatrix} z_0^Tz_0 & & \mathbf{0} \\  & ... & \\ \mathbf{0} & & z_M^Tz_M \end{bmatrix}^{-1}\begin{bmatrix} z_0^Ty \\ \vdots \\ z_M^Ty\end{bmatrix} (orthogonality) \\
+&= \mathbf{Z}\begin{bmatrix} \mathbf{1}^T\mathbf{1} & & \mathbf{0} \\  & ... & \\ \mathbf{0} & & z_M^Tz_M \end{bmatrix}^{-1}\begin{bmatrix} \mathbf{1}^Ty \\ \vdots \\ z_M^Ty\end{bmatrix} \\
+&= \mathbf{Z}\begin{bmatrix} n & & \mathbf{0} \\  & ... & \\ \mathbf{0} & & z_M^Tz_M\end{bmatrix}^{-1}\begin{bmatrix} \sum_{i=1}^ny_i \\ \vdots \\ z_m^Ty\end{bmatrix} \\
+&= \mathbf{Z}\begin{bmatrix} \frac{1}{n} & & \mathbf{0} \\  & ... & \\ \mathbf{0} & & \frac{1}{z_M^Tz_M}\end{bmatrix}\begin{bmatrix} \sum_{i=1}^ny_i\\ \vdots \\ z_M^Ty\end{bmatrix} \\
+&= \mathbf{Z}\begin{bmatrix} \bar{y} \\ z_1^Ty/z_1^Tz_1 \\ \vdots \\ z_M^Ty/z_M^Tz_M \end{bmatrix} \\
+&= \mathbf{Z}\begin{bmatrix} \bar{y} \\ \hat{\theta}_1 \\ \vdots \\ \hat{\theta}_M \end{bmatrix} \\
+&= \begin{bmatrix} \mathbf{1} & z_1 & ... & z_M \end{bmatrix} \begin{bmatrix} \bar{y} \\ \hat{\theta}_1 \\ \vdots \\ \hat{\theta}_M \end{bmatrix} \\
+&= \bar{y}\mathbf{1} + \sum_{m=1}^M\hat{\theta}_mz_m \\
+\end{align*}
+
+##b)
+If $V$ is a matrix whose columns are the $v_m$ and $\Theta$ is given by $(Z^TZ)^{-1}Z^Ty$ then we have
+\begin{align*}
+\mathbf{X}\hat{\beta}^{pcr}(M) &= \mathbf{Z}\Theta \\
+\mathbf{X}\hat{\beta}^{pcr}(M) &= \mathbf{X}V\Theta \\
+\hat{\beta}^{pcr}(M) &= V\Theta \\
+\hat{\beta}^{pcr}(M) &= \begin{bmatrix} v_1 & ... & v_M \end{bmatrix}\begin{bmatrix}\theta_1 \\ \vdots \\ \theta_M \end{bmatrix} \\
+\hat{\beta}^{pcr}(M) &= \begin{bmatrix} \sum_{i=1}^MV_{i1}\theta_i \\ \vdots \\ \sum_{i=1}^MV_{iM}\theta_M \end{bmatrix} \\
+\hat{\beta}^{pcr}(M) &= \sum_{i=1}^M\begin{bmatrix}V_{i1}\theta_i \\ \vdots \\ V_{iM}\theta_i\end{bmatrix} \\
+\hat{\beta}^{pcr}(M) &= \sum_{m=1}^M\hat{\theta}_mv_m \\
+\end{align*}
+
+$V$ is an orthogonal matrix and if we let $M=p$, it is also invertible. We will see what the PCR estimators are in this special case
+\begin{align*}
+\hat{\beta}^{pcr}(p) &= V\Theta \\
+&= V(\mathbf{Z}^T\mathbf{Z})^{-1}\mathbf{Z}^Ty \\
+&= V((\mathbf{X}V)^T\mathbf{X}V)^{-1}(\mathbf{X}V)^Ty \\
+&= V(V^T\mathbf{X}^T\mathbf{X}V)^{-1}V^T\mathbf{X}^Ty \\
+&= VV^{-1}(\mathbf{X}^T\mathbf{X})^{-1}(V^T)^{-1}V^T\mathbf{X}^Ty \\
+&= (\mathbf{X}^T\mathbf{X})^{-1}\mathbf{X}^Ty \\
+&= \hat{\beta}^{ls}
+\end{align*}
