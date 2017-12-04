@@ -1,0 +1,5 @@
+testScores = read.csv("http://www.math.mcgill.ca/yyang/regression/data/TestScores.csv", header=TRUE)
+testScores$Faculty = as.factor(testScores$Faculty)
+str(testScores)
+fit = lm(testScores$Score ~ testScores$Faculty, data=testScores)
+summary(fit)
